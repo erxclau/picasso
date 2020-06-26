@@ -1,0 +1,11 @@
+# Visual Studio Code
+.vscode
+
+# Python Virtual Environment
+venv
+
+# Imagga Client
+imagga_client.json
+
+# Raw Data
+data.json
