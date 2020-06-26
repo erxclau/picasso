@@ -1,49 +1,32 @@
 import os
 import json
-from urllib.parse import quote
-
-import requests
+from pprint import pprint
 
 filepath = os.path.dirname(os.path.abspath(__file__))
 
-readfile = filepath + '/../data/raw/wikiart.json'
+readfile = filepath + '/../data/raw/imagga.json'
 data = json.load(open(readfile))
-
-imaggafile = filepath + '/../imagga_client.json'
-imagga = json.load(open(imaggafile))
-
-writefile = filepath + '/../data/raw/imagga.json'
-
-BASE_URL = 'https://api.imagga.com/v2'
-ENDPOINT = 'colors'
-HEADERS = {'Authorization': imagga['AUTHORIZATION']}
 
 colors = dict()
 
+for key in list(data.keys()):
+    if not data[key]['year'] == "?":
+        c = data[key]['colors']['image_colors']
+        c = [
+            {
+                'html': color['html_code'],
+                'percent': color['percent'],
+                'parent': color['closest_palette_color_parent']
+            } for color in c
+        ]
+        colors[key[18:]] = {
+            'title': data[key]['title'],
+            'image': data[key]['image'],
+            'year': data[key]['year'],
+            'color': c
+        }
 
-def writeToFile(colors):
-    with open(writefile, 'w', encoding='utf-8') as file:
-        json.dump(colors, file, ensure_ascii=False)
+writefile = filepath + '/../data/colors.json'
 
-
-for key in data.keys():
-    work = data[key]
-    img = quote(work['image'], safe="/!:")
-    params = {'image_url': img}
-    try:
-        req = requests.get(f"{BASE_URL}/{ENDPOINT}",
-                           params=params, headers=HEADERS)
-        print(req.status_code, work['title'], work['year'])
-        if(req.status_code == 200):
-            res = req.json()
-            colors[key] = {
-                'colors': res['result']['colors'],
-                'image': work['image'],
-                'title': work['title'],
-                'year': work['year']
-            }
-    except:
-        writeToFile(colors)
-        continue
-
-writeToFile(colors)
+with open(writefile, 'w', encoding='utf-8') as file:
+    json.dump(colors, file, ensure_ascii=False, indent=2)
