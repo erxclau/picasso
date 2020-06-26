@@ -30,7 +30,7 @@ for element in elements:
     }
 
 filepath = os.path.dirname(os.path.abspath(__file__))
-writefile = filepath + '/data.json'
+writefile = filepath + '/../data/raw/wikiart.json'
 
 with open(writefile, 'w', encoding='utf-8') as file:
     json.dump(works, file, ensure_ascii=False)

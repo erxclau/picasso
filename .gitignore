@@ -8,4 +8,4 @@ venv
 imagga_client.json
 
 # Raw Data
-data.json
+data/raw
