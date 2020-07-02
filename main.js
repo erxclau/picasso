@@ -1,27 +1,45 @@
 window.onload = async () => {
     let data = await d3.json('data/colors.json');
-    for (let i = 0; i < data.length; i++) {
-        data[i].year = new Date(`${data[i].year}T12:00:00`)
-    }
-    let extent = d3.extent(data, d => d.year);
 
-    let margin = { 'top': 10, 'right': 20, 'bottom': 25, 'left': 20 };
-
-    let width = 500;
-    let height = 750;
+    let width = 1000;
+    let height = 16500;
 
     let svg = d3.select('svg')
         .attr('id', 'svg')
-        .attr('width', '1000px')
-        .attr('height', '16500px')
+        .attr('width', `${width}px`)
+        .attr('height', `${height}px`)
         .attr('font-family', 'sans-serif')
         .attr('font-size', 10);
 
-    let pseudo = svg._groups[0][0];
-    width = pseudo.clientWidth;
-    height = pseudo.clientHeight;
-
     let size = Math.floor(width / 14);
+
+    svg
+        .selectAll('.cirlce-group')
+        .data(data)
+        .enter()
+        .append('g')
+        .attr('class', 'cirlce-group')
+        .attr('id', d => d.id)
+        .attr('x', (d, i) => (i % 10) * size + (size / 2))
+        .attr('y', (d, i) => Math.floor(i / 10) * size + (size / 2))
+        .attr('transform',
+            (d, i) => `translate(${(i % 10) * size + 25}, ${Math.floor(i / 10) * size + 25})`)
+        .each(simulation)
+
+    function simulation(d, i) {
+        let s = d3.select(this);
+        let x = Number(s.attr('x'))
+        let y = Number(s.attr('y'))
+
+        let sim = d3.forceSimulation(d['color'])
+            .force('charge', d3.forceManyBody().strength(0))
+            .force('center', d3.forceCenter(x, y))
+            .force('collision', d3.forceCollide().radius(d => d.percent / 2));
+
+            sim.tick(100); // https://stackoverflow.com/questions/47510853/how-to-disable-animation-in-a-force-directed-graph
+
+            ticked(d3.select(this), d['color']);
+    }
 
     function ticked(selection, data) {
         let u = selection
@@ -38,33 +56,4 @@ window.onload = async () => {
 
         u.exit().remove()
     }
-
-    let simulation = function (d, i) {
-        let x = Number(d3.select(this).attr('x')) + size / 2
-        let y = Number(d3.select(this).attr('y')) + size / 2
-        console.log(x, y);
-        return d3.forceSimulation(d['color'])
-            .force('charge', d3.forceManyBody().strength(1))
-            .force('center', d3.forceCenter(x, y))
-            .force('collision', d3.forceCollide().radius(function (d) {
-                return d.percent / 2
-            }))
-            .on('tick', () => ticked(d3.select(this), d['color']));
-    }
-
-    let works = svg
-        .selectAll('.cirlce-group')
-        .data(data)
-        .enter()
-        .append('g')
-        .attr('class', 'cirlce-group')
-        .attr('id', d => d.id)
-        .attr('x', (d,i) => (i % 10) * size)
-        .attr('y', (d,i) => Math.floor(i / 10) * size)
-        .attr('transform',
-            (d,i) => `translate(
-                ${(i % 10) * size + 25},
-                ${Math.floor(i / 10) * size + 25}
-            )`)
-        .each(simulation)
 }
