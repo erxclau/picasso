@@ -15,9 +15,7 @@ for key in data.keys():
         image_colors = data[key]['colors']['image_colors']
         image_colors = [{
             'rgb': [color['r'], color['g'], color['b']],
-            # 'html': color['closest_palette_color_html_code'],
             'percent': color['percent'],
-            # 'parent': color['closest_palette_color_parent']
         } for color in image_colors]
 
         colors.append({

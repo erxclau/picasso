@@ -27,7 +27,7 @@ window.onload = async () => {
         .attr('x', (d, i) => getX(i) + (size / 2))
         .attr('y', (d, i) => getY(i) + (size / 2) + 30)
         .attr('transform',
-            (d, i) => `translate(${getX(i) + 25}, ${getY(i) + 25})`)
+            (d, i) => `translate(${getX(i) + 75}, ${getY(i) + 25})`)
         .each(simulation)
 
     let titles = works
