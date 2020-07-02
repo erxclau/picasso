@@ -4,62 +4,67 @@ window.onload = async () => {
         data[i].year = new Date(`${data[i].year}T12:00:00`)
     }
     let extent = d3.extent(data, d => d.year);
-    console.log(extent);
 
     let margin = { 'top': 10, 'right': 20, 'bottom': 25, 'left': 20 };
 
     let width = 500;
     let height = 750;
 
-    let svg = d3.select('body')
-        .append('svg')
+    let svg = d3.select('svg')
         .attr('id', 'svg')
-        .attr('width', '100%')
-        .attr('height', height)
+        .attr('width', '1000px')
+        .attr('height', '16500px')
         .attr('font-family', 'sans-serif')
         .attr('font-size', 10);
 
     let pseudo = svg._groups[0][0];
     width = pseudo.clientWidth;
+    height = pseudo.clientHeight;
 
-    let xScale = d3.scaleUtc()
-        .domain(extent)
-        .range([margin.left, width - margin.right]);
+    let size = Math.floor(width / 14);
 
-    let yScale = d3.scaleLinear()
-        .domain([100, 0])
-        .range([height - margin.bottom, margin.top]);
+    function ticked(selection, data) {
+        let u = selection
+            .selectAll('circle')
+            .data(data)
 
-    let xAxis = g => g
-        .attr('id', `svg`)
-        .attr('transform', `translate(0, ${height - margin.bottom})`)
-        .call(d3.axisBottom()
-                .scale(xScale)
-                .tickFormat(d3.timeFormat("%Y"))
-                .ticks(width / 50)
-                .tickSizeOuter(0)
-                );
+        u.enter()
+            .append('circle')
+            .attr('r', d => d.percent / 2)
+            .merge(u)
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('fill', d => `rgb(${d.rgb[0]}, ${d.rgb[1]}, ${d.rgb[2]})`)
 
-    svg.append('g')
-        .attr('id', 'x-axis')
-        .call(xAxis);
+        u.exit().remove()
+    }
 
-    let works = svg.selectAll('.cirlce-group')
+    let simulation = function (d, i) {
+        let x = Number(d3.select(this).attr('x')) + size / 2
+        let y = Number(d3.select(this).attr('y')) + size / 2
+        console.log(x, y);
+        return d3.forceSimulation(d['color'])
+            .force('charge', d3.forceManyBody().strength(1))
+            .force('center', d3.forceCenter(x, y))
+            .force('collision', d3.forceCollide().radius(function (d) {
+                return d.percent / 2
+            }))
+            .on('tick', () => ticked(d3.select(this), d['color']));
+    }
+
+    let works = svg
+        .selectAll('.cirlce-group')
         .data(data)
         .enter()
         .append('g')
-        .attr('class', 'circle-group')
+        .attr('class', 'cirlce-group')
         .attr('id', d => d.id)
-        .attr('transform', d => `translate(${xScale(d.year)}, 0)`)
-
-    works.selectAll('circle')
-        .data(d => d.color)
-        .enter()
-        .append('circle')
-        .attr('r', d => d.percent / 3)
-        .attr('cy', d => {
-            // console.log(yScale(d.percent))
-            return yScale(d.percent)
-        })
-        .attr('fill', d => d.html)
+        .attr('x', (d,i) => (i % 10) * size)
+        .attr('y', (d,i) => Math.floor(i / 10) * size)
+        .attr('transform',
+            (d,i) => `translate(
+                ${(i % 10) * size + 25},
+                ${Math.floor(i / 10) * size + 25}
+            )`)
+        .each(simulation)
 }
